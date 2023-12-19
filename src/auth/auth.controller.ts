@@ -14,7 +14,7 @@ import { LoginDto, RegisterDto } from './dto';
 import { Tokens } from './interfaces';
 import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { Cookie } from '@common/decorators';
+import { Cookie, UserAgent } from '@common/decorators';
 
 const REFRESH_TOKEN = 'refreshToken';
 
@@ -35,20 +35,18 @@ export class AuthController {
     }
 
     @Post('sign-in')
-    async signIn(@Body() dto: LoginDto, @Res() res: Response, @Req() req: Request) {
-        const agent = req.headers['user-agent'];
-        console.log(agent);
-        const tokens = await this.authService.signIn(dto);
+    async signIn(@Body() dto: LoginDto, @Res() res: Response, @Req() req: Request, @UserAgent() agent: string) {
+        const tokens = await this.authService.signIn(dto, agent);
         if (!tokens) throw new BadRequestException(`Не удалость войти с данными ${JSON.stringify(dto)}`);
 
         this.setRefreshTokenToCookies(tokens, res);
     }
 
     @Get('refresh-tokens')
-    async refreshTokens(@Cookie(REFRESH_TOKEN) refreshToken: string, @Res() res: Response) {
+    async refreshTokens(@Cookie(REFRESH_TOKEN) refreshToken: string, @Res() res: Response, @UserAgent() agent: string) {
         if (!refreshToken) throw new UnauthorizedException();
 
-        const tokens = await this.authService.refreshTokens(refreshToken);
+        const tokens = await this.authService.refreshTokens(refreshToken, agent);
 
         if (!tokens) throw new UnauthorizedException();
 
