@@ -5,11 +5,16 @@ import {
     Get,
     Param,
     ParseUUIDPipe,
+    UseGuards,
     UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserResponse } from './responses';
+import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
+import { CurrentUser } from '@common/decorators';
+import { JwtPayload } from '@auth/interfaces';
 
+@UseGuards(JwtAuthGuard)
 @Controller('user')
 export class UserController {
     constructor(private readonly userService: UserService) {}
@@ -30,7 +35,7 @@ export class UserController {
     }
 
     @Delete(':id')
-    async deleteUser(@Param('id', ParseUUIDPipe) id: string) {
-        return await this.userService.delete(id);
+    async deleteUser(@Param('id', ParseUUIDPipe) userId: string, @CurrentUser() user: JwtPayload) {
+        return await this.userService.delete(userId, user);
     }
 }

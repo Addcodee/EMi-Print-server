@@ -1,7 +1,11 @@
 import { IsPasswordsMatchingConstraint } from '@common/decorators';
-import { IsString, MinLength, Validate } from 'class-validator';
+import { IsEmail, IsString, MinLength, Validate } from 'class-validator';
 
 export class RegisterDto {
+    @IsString()
+    @IsEmail()
+    email: string;
+
     @IsString()
     phoneNumber: string;
 
