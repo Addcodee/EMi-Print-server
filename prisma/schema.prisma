@@ -17,7 +17,6 @@ model User {
   email String @unique
   phoneNumber String @unique @map("phone_number")
   password String
-  passwordConfirm String @map("password_confirm")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   companyName String @map("company_name")

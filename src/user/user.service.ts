@@ -9,15 +9,13 @@ export class UserService {
 
     save(user: Partial<User>) {
         const hashedPassword = this.hashPassword(user.password);
-        const hashedPasswordConfirm = this.hashPassword(user.passwordConfirm);
         return this.prismaService.user.create({
             data: {
                 name: 'Name',
                 lastName: 'LastName',
                 phoneNumber: user.phoneNumber,
-                email: '',
+                email: user.email,
                 password: hashedPassword,
-                passwordConfirm: hashedPasswordConfirm,
                 companyName: '',
                 roles: ['USER'],
                 avatar: '',
