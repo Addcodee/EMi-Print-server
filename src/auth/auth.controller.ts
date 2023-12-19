@@ -1,6 +1,7 @@
 import {
     BadRequestException,
     Body,
+    ClassSerializerInterceptor,
     Controller,
     Get,
     HttpStatus,
@@ -8,6 +9,8 @@ import {
     Req,
     Res,
     UnauthorizedException,
+    UseGuards,
+    UseInterceptors,
 } from '@nestjs/common';
 import AuthService from './auth.service';
 import { LoginDto, RegisterDto } from './dto';
@@ -15,6 +18,8 @@ import { Tokens } from './interfaces';
 import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { Cookie, UserAgent } from '@common/decorators';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { UserResponse } from '@user/responses';
 
 const REFRESH_TOKEN = 'refreshToken';
 
@@ -25,13 +30,14 @@ export class AuthController {
         private readonly configService: ConfigService,
     ) {}
 
+    @UseInterceptors(ClassSerializerInterceptor)
     @Post('sign-up')
     async signUp(@Body() dto: RegisterDto) {
         const user = await this.authService.signUp(dto);
 
         if (!user) throw new BadRequestException(`Не удается создать пользователя с данными ${JSON.stringify(dto)}`);
 
-        return user;
+        return new UserResponse(user);
     }
 
     @Post('sign-in')
@@ -42,6 +48,7 @@ export class AuthController {
         this.setRefreshTokenToCookies(tokens, res);
     }
 
+    @UseGuards(JwtAuthGuard)
     @Get('refresh-tokens')
     async refreshTokens(@Cookie(REFRESH_TOKEN) refreshToken: string, @Res() res: Response, @UserAgent() agent: string) {
         if (!refreshToken) throw new UnauthorizedException();
