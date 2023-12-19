@@ -17,7 +17,7 @@ import { LoginDto, RegisterDto } from './dto';
 import { Tokens } from './interfaces';
 import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { Cookie, UserAgent } from '@common/decorators';
+import { Cookie, CurrentUser, UserAgent } from '@common/decorators';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { UserResponse } from '@user/responses';
 
@@ -58,6 +58,24 @@ export class AuthController {
         if (!tokens) throw new UnauthorizedException();
 
         this.setRefreshTokenToCookies(tokens, res);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get('sign-out')
+    async signOut(@Cookie(REFRESH_TOKEN) refreshToken: string, @Res() res: Response) {
+        if (!refreshToken) {
+            res.sendStatus(HttpStatus.OK);
+            return;
+        }
+
+        await this.authService.deleteToken(refreshToken);
+        res.cookie(REFRESH_TOKEN, '', {
+            httpOnly: true,
+            secure: true,
+            expires: new Date(),
+        });
+
+        res.sendStatus(HttpStatus.OK);
     }
 
     private setRefreshTokenToCookies(tokens: Tokens, res: Response) {
