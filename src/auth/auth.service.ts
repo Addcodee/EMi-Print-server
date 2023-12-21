@@ -33,7 +33,7 @@ export default class AuthService {
     }
 
     async signIn(dto: LoginDto, agent: string): Promise<Tokens> {
-        const user: User = await this.userService.findOne(dto.phoneNumber, true).catch((err) => {
+        const user: User = await this.userService.findOne(dto.phoneNumber || dto.email, true).catch((err) => {
             this.logger.error(err);
             return null;
         });

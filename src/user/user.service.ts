@@ -20,33 +20,35 @@ export class UserService {
         const hashedPassword = this.hashPassword(user.password);
         return this.prismaService.user.create({
             data: {
-                name: 'Name',
-                lastName: 'LastName',
+                name: '',
+                lastName: '',
                 phoneNumber: user.phoneNumber,
                 email: user.email,
                 password: hashedPassword,
                 companyName: '',
-                roles: ['ADMIN'],
+                roles: user.email === 'admin@gmail.com' || user.phoneNumber === '999555000' ? ['ADMIN'] : ['USER'],
                 avatar: '',
             },
         });
     }
 
-    async findOne(idOrNumber: string, isReset = false) {
+    async findOne(idOrNumberOrEmail: string, isReset = false) {
         if (isReset) {
-            this.cacheManager.del(idOrNumber);
+            this.cacheManager.del(idOrNumberOrEmail);
         }
-        const user = await this.cacheManager.get<User>(idOrNumber);
+        const user = await this.cacheManager.get<User>(idOrNumberOrEmail);
         if (!user) {
             const user = await this.prismaService.user.findFirst({
-                where: { OR: [{ id: idOrNumber }, { phoneNumber: idOrNumber }] },
+                where: {
+                    OR: [{ id: idOrNumberOrEmail }, { phoneNumber: idOrNumberOrEmail }, { email: idOrNumberOrEmail }],
+                },
             });
 
             if (!user) return null;
 
             const timeOutInSec = convertToSecondsUtil(this.configService.get('JWT_EXP'));
 
-            await this.cacheManager.set(idOrNumber, user, timeOutInSec);
+            await this.cacheManager.set(idOrNumberOrEmail, user, timeOutInSec);
 
             return user;
         }
